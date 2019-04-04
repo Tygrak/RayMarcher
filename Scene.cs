@@ -7,35 +7,39 @@ namespace RayMarcher
 {
     class Scene
     {
-        const double renderDistance = 200;
-        public List<Sphere> spheres = new List<Sphere>() { new Sphere(new Point3d(2, -1, 5), 0.9, Color.Red),
+        const double renderDistance = 500;
+        public List<ISdfObject> objects = new List<ISdfObject>() { new Sphere(new Point3d(2, -1, 5), 0.9, Color.Red),
             new Sphere(new Point3d(1, 2, 7), 1, Color.Blue), new Sphere(new Point3d(-1, 2, 2), 1.1, Color.Green), 
             new Sphere(new Point3d(-5, -4, 13), 1.7, Color.Purple), new Sphere(new Point3d(2, 21, 58), 28, Color.Orange),
-            new Sphere(new Point3d(-40, 36, 198), 108, Color.Yellow)};
+            new HalfSpace(new Point3d(0, 40, 0), new Point3d(0, -1, 0), Color.MediumSeaGreen),
+            new SdfSmoothUnion(new Sphere(new Point3d(-40, 36, 198), 108, Color.Yellow), new Sphere(new Point3d(70, 56, 168), 108, Color.Yellow), 0.9)};
+        
+        //public List<ISdfObject> objects = new List<ISdfObject>() { new Box(new Point3d(0, 0, 15), 5, Color.Red)};
+        //public List<ISdfObject> objects = new List<ISdfObject>() { new SdfRepetition(new Sphere(new Point3d(0, 0, 0), 0.5, Color.Red), 4)};
  
         public double DistanceFromScene(Point3d point)
         {
-            if (spheres.Count == 0) return 100000;
-            double min = point.DistanceFromSphere(spheres[0]);
-            for (int i = 1; i < spheres.Count; i++)
+            if (objects.Count == 0) return 100000;
+            double min = point.DistanceFromSdfObject(objects[0]);
+            for (int i = 1; i < objects.Count; i++)
             {
-                min = Math.Min(min, point.DistanceFromSphere(spheres[i]));
+                min = Math.Min(min, point.DistanceFromSdfObject(objects[i]));
             }
             return min;
         }
 
-        public Sphere ClosestObject(Point3d point)
+        public ISdfObject ClosestObject(Point3d point)
         {
-            if (spheres.Count == 0) return null;
-            Sphere closest = spheres[0];
-            double min = point.DistanceFromSphere(spheres[0]);
-            for (int i = 1; i < spheres.Count; i++)
+            if (objects.Count == 0) return null;
+            ISdfObject closest = objects[0];
+            double min = point.DistanceFromSdfObject(objects[0]);
+            for (int i = 1; i < objects.Count; i++)
             {
-                double dist = point.DistanceFromSphere(spheres[i]);
+                double dist = point.DistanceFromSdfObject(objects[i]);
                 if (min > dist)
                 {
                     min = dist;
-                    closest = spheres[i];
+                    closest = objects[i];
                 }
             }
             return closest;
@@ -76,7 +80,7 @@ namespace RayMarcher
             int steps = 0;
             while (dist < maxDist)
             {
-                double pointDist = currPoint.DistanceFromSphere(sphere);
+                double pointDist = currPoint.DistanceFromSdfObject(sphere);
                 dist += pointDist;
                 currPoint += vector * pointDist;
                 steps++;
@@ -93,16 +97,17 @@ namespace RayMarcher
         public Bitmap DrawScene()
         {
             Point3d light = new Point3d(0.03, -1, 0.1);
-            Bitmap bmp = new Bitmap(1000, 1000);
+            Bitmap bmp = new Bitmap(600, 600);
             Point3d camera = new Point3d(0, 0, -1);
-            for (int y = bmp.Size.Height-1; y >= 0; y--)
+            for (int y = 0; y < bmp.Size.Height; y++)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
                 {
-                    Point3d viewPoint = new Point3d((x-bmp.Size.Width/2) / (bmp.Size.Width/2d) + camera.X, 
-                        (y-bmp.Size.Height/2) / (bmp.Size.Height/2d) + camera.Y,
+                    Point3d viewPoint = new Point3d((x-bmp.Size.Width/2) / (bmp.Size.Width*0.5) + camera.X, 
+                        (y-bmp.Size.Height/2) / (bmp.Size.Height*0.5) + camera.Y,
                         1 + camera.Z);
                     (double distance, int steps, Point3d hitPoint) = RayMarch(camera, viewPoint, renderDistance);
+                    //Console.WriteLine(distance);
                     if (distance >= renderDistance-0.5)
                     {
                         //Color color = Color.FromArgb(Math.Min(steps, 250), Math.Min(steps, 250), Math.Min(steps, 250));
@@ -111,20 +116,16 @@ namespace RayMarcher
                     }
                     else
                     {
-                        Sphere sphere = ClosestObject(hitPoint);
-                        Point3d lNormalPoint = (sphere.Point - hitPoint-new Point3d(-0.0001, 0, 0));
-                        Point3d rNormalPoint = (sphere.Point - hitPoint-new Point3d(0.0001, 0, 0));
-                        Point3d uNormalPoint = (sphere.Point - hitPoint-new Point3d(0, 0.0001, 0));
-                        Point3d dNormalPoint = (sphere.Point - hitPoint-new Point3d(0, -0.0001, 0));
+                        ISdfObject sdfObject = ClosestObject(hitPoint);
                         Point3d normal = new Point3d(
-                            (hitPoint + new Point3d(0.001, 0, 0)).DistanceFromSphere(sphere) - (hitPoint - new Point3d(0.001, 0, 0)).DistanceFromSphere(sphere),
-                            (hitPoint + new Point3d(0, 0.001, 0)).DistanceFromSphere(sphere) - (hitPoint - new Point3d(0, 0.001, 0)).DistanceFromSphere(sphere),
-                            (hitPoint + new Point3d(0, 0, 0.001)).DistanceFromSphere(sphere) - (hitPoint - new Point3d(0, 0, 0.001)).DistanceFromSphere(sphere)
+                            (hitPoint + new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject),
+                            (hitPoint + new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject),
+                            (hitPoint + new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject)
                         ).VectorNormalize();
                         double NdotL = LambertNdotL(normal, light);
-                        Color color = Color.FromArgb((int) (sphere.Color.R*NdotL), (int) (sphere.Color.G*NdotL), (int) (sphere.Color.B*NdotL));
+                        Color color = Color.FromArgb((int) (sdfObject.ObjectColor.R*NdotL), (int) (sdfObject.ObjectColor.G*NdotL), (int) (sdfObject.ObjectColor.B*NdotL));
                         //Console.WriteLine(NdotL);
-                        double sphereDist = camera.DistanceFromSphere(sphere);
+                        double sphereDist = camera.DistanceFromSdfObject(sdfObject);
                         bmp.SetPixel(x, y, color);
                     }
                 }

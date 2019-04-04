@@ -24,19 +24,9 @@ namespace RayMarcher{
             return DistanceFromPoint(point.X, point.Y, point.Z);
         }
 
-        public double DistanceFromSphere(Point3d point, double radius)
+        public double DistanceFromSdfObject(ISdfObject sdfObject)
         {
-            return DistanceFromPoint(point) - radius;
-        }
-
-        public double DistanceFromSphere(double x, double y, double z, double radius)
-        {
-            return DistanceFromPoint(x, y, z) - radius;
-        }
-
-        public double DistanceFromSphere(Sphere sphere)
-        {
-            return DistanceFromSphere(sphere.Point, sphere.Radius);
+            return sdfObject.DistanceFromPoint(this);
         }
  
         public double VectorLength()
