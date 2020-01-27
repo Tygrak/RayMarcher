@@ -12,8 +12,12 @@ namespace RayMarcher
         public List<ISdfObject> objects = new List<ISdfObject>() {};
         public double GlobalIllumination = 0;
         public Point3d GlobalLight = new Point3d(0.53, -1, 0.1);
+        public Point3d CameraPosition = new Point3d();
+        public Point3d CameraRotation = new Point3d();
 
-        public double DistanceFromScene(Point3d point)
+        private Matrix3d cameraRotationMatrix = new Matrix3d();
+
+        private double DistanceFromScene(Point3d point)
         {
             if (objects.Count == 0) return 100000;
             double min = point.DistanceFromSdfObject(objects[0]);
@@ -24,7 +28,7 @@ namespace RayMarcher
             return min;
         }
 
-        public ISdfObject ClosestObject(Point3d point)
+        private ISdfObject ClosestObject(Point3d point)
         {
             if (objects.Count == 0) return null;
             ISdfObject closest = objects[0];
@@ -41,12 +45,12 @@ namespace RayMarcher
             return closest;
         }
  
-        public (double distance, int steps, Point3d finalPoint) RayMarch(Point3d x, Point3d y, double maxDist)
+        private (double distance, int steps, Point3d finalPoint) RayMarch(Point3d x, Point3d y, double maxDist)
         {
             return RayMarch(x, y, maxDist, 0.0001);
         }
 
-        public (double distance, int steps, Point3d finalPoint) RayMarch(Point3d x, Point3d y, double maxDist, double cutoff)
+        private (double distance, int steps, Point3d finalPoint) RayMarch(Point3d x, Point3d y, double maxDist, double cutoff)
         {
             Point3d vector = (y - x).VectorNormalize();
             Point3d currPoint = x;
@@ -63,7 +67,7 @@ namespace RayMarcher
             return (dist, steps, currPoint);
         }
 
-        public double LambertNdotL(Point3d normal, Point3d light)
+        private double LambertNdotL(Point3d normal, Point3d light)
         {
             return Math.Min(Math.Max(normal.VectorDot(light), 0), 1);
         }
@@ -71,26 +75,25 @@ namespace RayMarcher
         public Bitmap DrawScene()
         {
             Point3d camera = new Point3d(0, 0, -2);
-            return DrawScene(600, 600, camera);
+            return DrawScene(600, 600);
         }
  
-        public Bitmap DrawScene(int width, int height, Point3d cameraPosition)
+        public Bitmap DrawScene(int width, int height)
         {
             Bitmap bmp = new Bitmap(width, height);
-            Point3d camera = cameraPosition;
+            UpdateMatrix();
             GlobalLight = GlobalLight.VectorNormalize();
             for (int y = 0; y < bmp.Size.Height; y++)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
                 {
-                    Point3d viewPoint = new Point3d((x-bmp.Size.Width/2) / (bmp.Size.Height*0.5) + camera.X, 
-                        (y-bmp.Size.Height/2) / (bmp.Size.Height*0.5) + camera.Y,
-                        1 + camera.Z);
-                    (double distance, int steps, Point3d hitPoint) = RayMarch(camera, viewPoint, renderDistance);
-                    //Console.WriteLine(distance);
+                    Point3d viewPoint = cameraRotationMatrix*new Point3d(
+                        (x-bmp.Size.Width/2) / (bmp.Size.Height*0.5), 
+                        (y-bmp.Size.Height/2) / (bmp.Size.Height*0.5),
+                        1)+CameraPosition;
+                    (double distance, int steps, Point3d hitPoint) = RayMarch(CameraPosition, viewPoint, renderDistance);
                     if (distance >= renderDistance-0.5)
                     {
-                        //Color color = Color.FromArgb(Math.Min(steps, 250), Math.Min(steps, 250), Math.Min(steps, 250));
                         Color color = Color.FromArgb(0, 0, 0);
                         bmp.SetPixel(x, y, color);
                     }
@@ -105,7 +108,7 @@ namespace RayMarcher
             return bmp;
         }
 
-        public Color ColorFromPointFakeShadows(Point3d hitPoint)
+        private Color ColorFromPointFakeShadows(Point3d hitPoint)
         {
             ISdfObject sdfObject = ClosestObject(hitPoint);
             Point3d normal = new Point3d(
@@ -118,7 +121,7 @@ namespace RayMarcher
             return Color.FromArgb((int) (sdfObject.ObjectColor.R*NdotL), (int) (sdfObject.ObjectColor.G*NdotL), (int) (sdfObject.ObjectColor.B*NdotL));
         }
 
-        public Color ColorFromPointShadows(Point3d hitPoint)
+        private Color ColorFromPointShadows(Point3d hitPoint)
         {
             ISdfObject sdfObject = ClosestObject(hitPoint);
             Point3d normal = new Point3d(
@@ -132,6 +135,19 @@ namespace RayMarcher
             double light = (hitPoint-lightHitPoint).VectorLength();
             light = (1-Math.Min(light, 1.0))/1;
             return Color.FromArgb((int) (sdfObject.ObjectColor.R*light*NdotL), (int) (sdfObject.ObjectColor.G*light*NdotL), (int) (sdfObject.ObjectColor.B*light*NdotL));
+        }
+
+        private void UpdateMatrix() {
+            Matrix3d x = new Matrix3d(1, 0, 0, 
+                                      0, Math.Cos(CameraRotation.X), -Math.Sin(CameraRotation.X), 
+                                      0, Math.Sin(CameraRotation.X), Math.Cos(CameraRotation.X));
+            Matrix3d y = new Matrix3d(Math.Cos(CameraRotation.Y), 0, Math.Sin(CameraRotation.Y), 
+                                      0, 1, 0, 
+                                      -Math.Sin(CameraRotation.Y), 0, Math.Cos(CameraRotation.Y));
+            Matrix3d z = new Matrix3d(Math.Cos(CameraRotation.Z), -Math.Sin(CameraRotation.Z), 0, 
+                                      Math.Sin(CameraRotation.Z), Math.Cos(CameraRotation.Z), 0, 
+                                      0, 0, 1);
+            cameraRotationMatrix = z*y*x;
         }
     }
 }
