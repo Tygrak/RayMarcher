@@ -13,7 +13,7 @@ namespace RayMarcher{
         {
             A = a;
             B = b;
-            color = Color.White;
+            color = a.ObjectColor;
         }
 
         public SdfUnion(ISdfObject a, ISdfObject b, Color color)

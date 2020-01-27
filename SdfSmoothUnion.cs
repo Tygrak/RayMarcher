@@ -15,7 +15,7 @@ namespace RayMarcher{
             A = a;
             B = b;
             Blend = blend;
-            color = Color.White;
+            color = a.ObjectColor;
         }
 
         public SdfSmoothUnion(ISdfObject a, ISdfObject b, double blend, Color color)
