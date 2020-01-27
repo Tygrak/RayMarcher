@@ -8,20 +8,10 @@ namespace RayMarcher
     class Scene
     {
         const double renderDistance = 600;
-        /*public List<ISdfObject> objects = new List<ISdfObject>() { new Sphere(new Point3d(2, -1, 5), 0.9, Color.Red),
-            new Sphere(new Point3d(1, 2, 7), 1, Color.Blue), new Sphere(new Point3d(-1, 2, 2), 1.1, Color.Green), 
-            new Sphere(new Point3d(-5, -4, 13), 1.7, Color.Purple), new Sphere(new Point3d(2, 21, 58), 28, Color.Orange),
-            new HalfSpace(new Point3d(0, 40, 0), new Point3d(0, -1, 0), Color.MediumSeaGreen),
-            new SdfSmoothUnion(new Sphere(new Point3d(-40, 36, 198), 108, Color.Yellow), new Sphere(new Point3d(70, 56, 168), 108, Color.Yellow), 0.9)};*/
-        
-        //public List<ISdfObject> objects = new List<ISdfObject>() { new Box(new Point3d(0, 0, 15), 5, Color.Red)};
-        /*public List<ISdfObject> objects = new List<ISdfObject>() { new SdfRepetition(new Sphere(new Point3d(-2, 0, 0), 0.5, Color.Blue), 8),
-                                                                   new SdfRepetition(new Sphere(new Point3d(0, -2, 0), 0.5, Color.Green), 8),
-                                                                   new SdfRepetition(new Sphere(new Point3d(0, 2, 0), 0.5, Color.White), 8),
-                                                                   new SdfRepetition(new Sphere(new Point3d(2, 0, 0), 0.5, Color.Red), 8)};*/
- 
+
         public List<ISdfObject> objects = new List<ISdfObject>() {};
         public double GlobalIllumination = 0;
+        public Point3d GlobalLight = new Point3d(0.53, -1, 0.1);
 
         public double DistanceFromScene(Point3d point)
         {
@@ -86,10 +76,9 @@ namespace RayMarcher
  
         public Bitmap DrawScene(int width, int height, Point3d cameraPosition)
         {
-            Point3d light = new Point3d(0.03, -1, 0.1);
             Bitmap bmp = new Bitmap(width, height);
             Point3d camera = cameraPosition;
-            double screenWidthHeightRatio = bmp.Size.Width / ((double) bmp.Size.Height);
+            GlobalLight = GlobalLight.VectorNormalize();
             for (int y = 0; y < bmp.Size.Height; y++)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
@@ -107,22 +96,42 @@ namespace RayMarcher
                     }
                     else
                     {
-                        ISdfObject sdfObject = ClosestObject(hitPoint);
-                        Point3d normal = new Point3d(
-                            (hitPoint + new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject),
-                            (hitPoint + new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject),
-                            (hitPoint + new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject)
-                        ).VectorNormalize();
-                        double NdotL = LambertNdotL(normal, light);
-                        NdotL = NdotL > GlobalIllumination ? NdotL : GlobalIllumination;
-                        Color color = Color.FromArgb((int) (sdfObject.ObjectColor.R*NdotL), (int) (sdfObject.ObjectColor.G*NdotL), (int) (sdfObject.ObjectColor.B*NdotL));
-                        //Console.WriteLine(NdotL);
-                        double sphereDist = camera.DistanceFromSdfObject(sdfObject);
+                        //Color color = ColorFromPointFakeShadows(hitPoint);
+                        Color color = ColorFromPointShadows(hitPoint);
                         bmp.SetPixel(x, y, color);
                     }
                 }
             }
             return bmp;
+        }
+
+        public Color ColorFromPointFakeShadows(Point3d hitPoint)
+        {
+            ISdfObject sdfObject = ClosestObject(hitPoint);
+            Point3d normal = new Point3d(
+                (hitPoint + new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject),
+                (hitPoint + new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject),
+                (hitPoint + new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject)
+            ).VectorNormalize();
+            double NdotL = LambertNdotL(normal, GlobalLight);
+            NdotL = NdotL > GlobalIllumination ? NdotL : GlobalIllumination;
+            return Color.FromArgb((int) (sdfObject.ObjectColor.R*NdotL), (int) (sdfObject.ObjectColor.G*NdotL), (int) (sdfObject.ObjectColor.B*NdotL));
+        }
+
+        public Color ColorFromPointShadows(Point3d hitPoint)
+        {
+            ISdfObject sdfObject = ClosestObject(hitPoint);
+            Point3d normal = new Point3d(
+                (hitPoint + new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0.001, 0, 0)).DistanceFromSdfObject(sdfObject),
+                (hitPoint + new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0.001, 0)).DistanceFromSdfObject(sdfObject),
+                (hitPoint + new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject) - (hitPoint - new Point3d(0, 0, 0.001)).DistanceFromSdfObject(sdfObject)
+            ).VectorNormalize();
+            double NdotL = LambertNdotL(normal, GlobalLight);
+            Point3d lightPoint = hitPoint+(GlobalLight)*renderDistance;
+            (double distance, int steps, Point3d lightHitPoint) = RayMarch(lightPoint, hitPoint, renderDistance*2);
+            double light = (hitPoint-lightHitPoint).VectorLength();
+            light = (1-Math.Min(light, 1.0))/1;
+            return Color.FromArgb((int) (sdfObject.ObjectColor.R*light*NdotL), (int) (sdfObject.ObjectColor.G*light*NdotL), (int) (sdfObject.ObjectColor.B*light*NdotL));
         }
     }
 }

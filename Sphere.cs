@@ -9,6 +9,20 @@ namespace RayMarcher{
         private Color color;
         public Color ObjectColor{ get {return color;} set {color = value;} }
  
+        public Sphere(double radius)
+        {
+            Point = new Point3d();
+            Radius = radius;
+            color = Color.White;
+        }
+
+        public Sphere(double radius, Color color)
+        {
+            Point = new Point3d();
+            Radius = radius;
+            this.color = color;
+        }
+
         public Sphere(Point3d point, double radius)
         {
             Point = point;

@@ -63,6 +63,11 @@ namespace RayMarcher{
         {
             return new Point3d(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         }
+
+        public static Point3d operator -(Point3d a)
+        {
+            return new Point3d(-a.X, -a.Y, -a.Z);
+        }
  
         public static Point3d operator *(Point3d a, double b)
         {
@@ -73,5 +78,10 @@ namespace RayMarcher{
         {
             return new Point3d(a.X / b, a.Y / b, a.Z / b);
         }
+
+        public override string ToString()
+        {
+            return $"({X}, {Y}, {Z})";
+        } 
     }
 }

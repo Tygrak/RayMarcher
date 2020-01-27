@@ -8,6 +8,14 @@ namespace RayMarcher{
         public Point3d Size;
         private Color color;
         public Color ObjectColor{ get {return color;} set {color = value;} }
+
+        public Box(double size) : this(new Point3d(), new Point3d(size, size, size), Color.White)
+        {
+        }
+
+        public Box(double size, Color color) : this(new Point3d(), new Point3d(size, size, size), color)
+        {
+        }
  
         public Box(Point3d point, double size) : this(point, new Point3d(size, size, size), Color.White)
         {

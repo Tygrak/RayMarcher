@@ -20,7 +20,6 @@ namespace RayMarcher{
             RepetitionDistance = repetitionDistance;
         }
 
-        //todo: fix
         public double DistanceFromPoint(Point3d point)
         {
 			//Math.IEEERemainder(point.X,RepetitionDistance) - RepetitionDistance/2, 
