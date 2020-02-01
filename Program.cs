@@ -22,14 +22,14 @@ namespace RayMarcher
             /*scene.objects.Add(new Box(new Point3d(10, 5, 30), 10, Color.FromArgb(202, 88, 98)));
             scene.objects.Add(new Box(new Point3d(-11, 7, 25), 10, Color.FromArgb(202, 88, 98)));
             scene.objects.Add(new Box(new Point3d(-18, 2, 38), 10, Color.FromArgb(202, 88, 98)));*/
-            scene.objects.Add(new SdfTranslation(new SdfRepetition(
+            /*scene.objects.Add(new SdfTranslation(new SdfRepetition(
                     new SdfSmoothUnion(
                     new SdfSmoothSubtraction(
                     new SdfSmoothUnion(
                     new SdfRotation(new Box(10, Color.FromArgb(202, 88, 98)), new Point3d(0, 1.2, 0)), new Sphere(new Point3d(3,1,1), 9), 3.8),
                     new Sphere(new Point3d(0, -5, 0), 6), 3),
                     new Sphere(new Point3d(0, -14, 0), 3), 13),
-                new Point3d(50, 0, 50)), new Point3d(-3, 4, 75)));
+                new Point3d(50, 0, 50)), new Point3d(-3, 4, 75)));*/
             //scene.objects.Add(new SdfTranslation(new Box(10), new Point3d(-10, 19, -30)));
             scene.objects.Add(new Box(new Point3d(0, 16, 60), new Point3d(2000, 20, 2000), Color.FromArgb(102, 28, 98)));
             /*scene.objects.Add(new SdfTranslation(

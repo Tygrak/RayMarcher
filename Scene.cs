@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Drawing;
  
 namespace RayMarcher
@@ -83,10 +83,11 @@ namespace RayMarcher
         public Bitmap DrawScene(int width, int height)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            Bitmap bmp = new Bitmap(width, height);
+            DirectBitmap bmp = new DirectBitmap(width, height);
             UpdateMatrix();
             GlobalLight = GlobalLight.VectorNormalize();
             Color[,] resultImage = new Color[width, height];
+            List<Task> pointCalculationTasks = new List<Task>(bmp.Size.Height*bmp.Size.Width);
             for (int y = 0; y < bmp.Size.Height; y++)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
@@ -95,24 +96,42 @@ namespace RayMarcher
                         (x-bmp.Size.Width/2) / (bmp.Size.Height*0.5), 
                         (y-bmp.Size.Height/2) / (bmp.Size.Height*0.5),
                         1)+CameraPosition;
-                    (double distance, int steps, Point3d hitPoint) = RayMarch(CameraPosition, viewPoint, renderDistance);
-                    if (distance >= renderDistance-0.5)
+                    int imageX = x;
+                    int imageY = y;
+                    pointCalculationTasks.Add(Task.Run(() => 
                     {
-                        Color color = Color.FromArgb(0, 0, 0);
-                        bmp.SetPixel(x, y, color);
-                    }
-                    else
+                        (double distance, int steps, Point3d hitPoint) = RayMarch(CameraPosition, viewPoint, renderDistance);
+                        if (distance >= renderDistance-0.5)
+                        {
+                            Color color = Color.FromArgb(0, 0, 0);
+                            resultImage[imageX, imageY] = color;
+                        }
+                        else
+                        {
+                            Color color = ColorFromPointShadows(hitPoint);
+                            resultImage[imageX, imageY] = color;
+                        }
+                    }));
+                }
+            }
+            for (int i = 0; i < pointCalculationTasks.Count; i++)
+            {
+                pointCalculationTasks[i].Wait();
+            }
+            for (int x = 0; x < bmp.Size.Width; x++)
+            {
+                for (int y = 0; y < bmp.Size.Height; y++)
+                {
+                    if (resultImage[x, y] == null)
                     {
-                        //Color color = ColorFromPointFakeShadows(hitPoint);
-                        Color color = ColorFromPointShadows(hitPoint);
-                        resultImage[x,y] = color;
-                        //bmp.SetPixel(x, y, color);
+                        continue;
                     }
+                    bmp.SetPixel(x, y, resultImage[x, y]);
                 }
             }
             watch.Stop();
             lastRunTime = watch.ElapsedMilliseconds;
-            return bmp;
+            return bmp.Bitmap;
         }
 
         private Color ColorFromPointFakeShadows(Point3d hitPoint)
