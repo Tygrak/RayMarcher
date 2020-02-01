@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace RayMarcher{
+namespace RayMarcher.SdfFunctions {
     public class SdfSmoothSubtraction : ISdfObject
     {
         public ISdfObject A;

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
 using System.Drawing;
+using RayMarcher.SdfFunctions;
+using RayMarcher.SdfObjects;
 //using System.Drawing.Drawing2D;
 
 namespace RayMarcher
@@ -40,7 +42,7 @@ namespace RayMarcher
             ));*/
             scene.GlobalIllumination = 0.25;
             scene.GlobalLight = new Point3d(-0.83, -1, -0.7);
-            for (int i = 0; i < 120; i++)
+            /*for (int i = 0; i < 120; i++)
             {
                 if (i > 0 && i%5 == 0) {
                     Console.WriteLine($"Creating {i}. image");
@@ -48,11 +50,12 @@ namespace RayMarcher
                 scene.CameraPosition = new Point3d(-5, -15, -10);
                 scene.CameraRotation = new Point3d(0, Math.PI*(i/60.0), 0);
                 scene.DrawScene(800, 600).Save($"output/output{i}.png");
-            }
+            }*/
             //Console.WriteLine($"Done creating {tasks.Count} images!");
             scene.CameraPosition = new Point3d(-5, -15, -10);
             scene.CameraRotation = new Point3d(0, 0, 0);
             scene.DrawScene(800, 600).Save("output.png");
+            Console.WriteLine($"Scene rendered in {scene.LastRunTime}ms");
         }
     }
 }

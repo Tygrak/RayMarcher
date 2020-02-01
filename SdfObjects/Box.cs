@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace RayMarcher{
+namespace RayMarcher.SdfObjects {
     public class Box : ISdfObject
     {
         public Point3d Point;

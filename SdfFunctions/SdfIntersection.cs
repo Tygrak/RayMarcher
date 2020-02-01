@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace RayMarcher{
+namespace RayMarcher.SdfFunctions {
     public class SdfIntersection : ISdfObject
     {
         public ISdfObject A;

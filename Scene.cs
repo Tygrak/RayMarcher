@@ -14,7 +14,9 @@ namespace RayMarcher
         public Point3d GlobalLight = new Point3d(0.53, -1, 0.1);
         public Point3d CameraPosition = new Point3d();
         public Point3d CameraRotation = new Point3d();
+        public long LastRunTime {get {return lastRunTime;}}
 
+        private long lastRunTime;
         private Matrix3d cameraRotationMatrix = new Matrix3d();
 
         private double DistanceFromScene(Point3d point)
@@ -80,9 +82,11 @@ namespace RayMarcher
  
         public Bitmap DrawScene(int width, int height)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             Bitmap bmp = new Bitmap(width, height);
             UpdateMatrix();
             GlobalLight = GlobalLight.VectorNormalize();
+            Color[,] resultImage = new Color[width, height];
             for (int y = 0; y < bmp.Size.Height; y++)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
@@ -101,10 +105,13 @@ namespace RayMarcher
                     {
                         //Color color = ColorFromPointFakeShadows(hitPoint);
                         Color color = ColorFromPointShadows(hitPoint);
-                        bmp.SetPixel(x, y, color);
+                        resultImage[x,y] = color;
+                        //bmp.SetPixel(x, y, color);
                     }
                 }
             }
+            watch.Stop();
+            lastRunTime = watch.ElapsedMilliseconds;
             return bmp;
         }
 

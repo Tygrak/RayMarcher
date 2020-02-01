@@ -1,20 +1,22 @@
 using System;
 using System.Drawing;
 
-namespace RayMarcher{
-    public class SdfSliceXZ : ISdfObject
+namespace RayMarcher.SdfFunctions {
+    public class SdfTranslation : ISdfObject
     {
         public ISdfObject Primitive;
+        public Point3d Translation;
         public Color ObjectColor{ get {return Primitive.ObjectColor;} set {Primitive.ObjectColor = value;} } 
  
-        public SdfSliceXZ(ISdfObject primitive)
+        public SdfTranslation(ISdfObject primitive, Point3d translation)
         {
             Primitive = primitive;
+            Translation = translation;
         }
 
         public double DistanceFromPoint(Point3d point)
         {
-            return Math.Max(-point.Y, Primitive.DistanceFromPoint(point));
+            return Primitive.DistanceFromPoint(point-Translation);
         }
     }
 }
