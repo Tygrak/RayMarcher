@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
 
+//taken from https://stackoverflow.com/questions/24701703/c-sharp-faster-alternatives-to-setpixel-and-getpixel-for-bitmaps-for-windows-f
+
 public class DirectBitmap : IDisposable
 {
     public Bitmap Bitmap { get; private set; }
@@ -30,6 +32,14 @@ public class DirectBitmap : IDisposable
         int col = colour.ToArgb();
 
         Bits[index] = col;
+    }
+
+    public void SetAllPixels(Color[] bits)
+    {
+        for (int i = 0; i < Bits.Length; i++)
+        {
+            Bits[i] = bits[i].ToArgb();
+        }
     }
 
     public Color GetPixel(int x, int y)

@@ -31,7 +31,7 @@ namespace RayMarcher
                     new Sphere(new Point3d(0, -14, 0), 3), 13),
                 new Point3d(50, 0, 50)), new Point3d(-3, 4, 75)));*/
             //scene.objects.Add(new SdfTranslation(new Box(10), new Point3d(-10, 19, -30)));
-            scene.objects.Add(new Box(new Point3d(0, 16, 60), new Point3d(2000, 20, 2000), Color.FromArgb(102, 28, 98)));
+            scene.objects.Add(new Box(new Point3d(0, 25, 60), new Point3d(2000, 20, 2000), Color.FromArgb(102, 28, 98)));
             /*scene.objects.Add(new SdfTranslation(
                 new SdfRepetition(
                 new SdfSubtraction(
@@ -39,23 +39,30 @@ namespace RayMarcher
                     new Sphere(5.25)
                 ), new Point3d(18, 0, 18)), 
                 new Point3d(9, 0, -10)
-            ));*/
-            scene.GlobalIllumination = 0.25;
-            scene.GlobalLight = new Point3d(-0.83, -1, -0.7);
-            /*for (int i = 0; i < 120; i++)
+            ));*/   
+            Sphere targetSphere = new Sphere(new Point3d(0, 0, 0), 5.0, Color.BlueViolet);
+            scene.objects.Add(new SdfSmoothUnion(
+                new SdfUnion(new Sphere(new Point3d(-40, 0, 0), 10.0, Color.BlueViolet), 
+                             new Sphere(new Point3d(40, 0, 0), 10.0, Color.BlueViolet)), 
+                targetSphere, 5));
+            scene.GlobalIllumination = 0.125;
+            scene.GlobalLight = new Point3d(-0.67, -1, -0.56);
+            scene.CameraPosition = new Point3d(0, 0, -10);
+            scene.CameraRotation = new Point3d(0, 0, 0);
+            /*for (int i = 0; i < 720; i++)
             {
-                if (i > 0 && i%5 == 0) {
-                    Console.WriteLine($"Creating {i}. image");
-                }
-                scene.CameraPosition = new Point3d(-5, -15, -10);
-                scene.CameraRotation = new Point3d(0, Math.PI*(i/60.0), 0);
+                targetSphere.Point = new Point3d(Math.Sin(Math.PI*(i/60.0))*32.5, 0, 0);
+                scene.CameraPosition = new Point3d(55*Math.Sin(Math.PI*(i/360.0)), 0, -55*Math.Cos(Math.PI*(i/360.0)));
+                scene.CameraRotation = new Point3d(0, -Math.PI*(i/360.0), 0);
                 scene.DrawScene(800, 600).Save($"output/output{i}.png");
+                if (i > 0 && i%5 == 0) {
+                    Console.WriteLine($"Created {i}. image");
+                    Console.WriteLine($"Image rendered in {scene.LastRunTime}ms ({scene.LastRunTime/1000.0}s)");
+                }
             }*/
             //Console.WriteLine($"Done creating {tasks.Count} images!");
-            scene.CameraPosition = new Point3d(-5, -15, -10);
-            scene.CameraRotation = new Point3d(0, 0, 0);
             scene.DrawScene(800, 600).Save("output.png");
-            Console.WriteLine($"Scene rendered in {scene.LastRunTime}ms");
+            Console.WriteLine($"Scene rendered in {scene.LastRunTime}ms ({scene.LastRunTime/1000.0}s)");
         }
     }
 }
