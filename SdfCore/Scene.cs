@@ -14,6 +14,7 @@ namespace RayMarcher
         public Point3d GlobalLight = new Point3d(0.53, -1, 0.1);
         public Point3d CameraPosition = new Point3d();
         public Point3d CameraRotation = new Point3d();
+        public double CameraFocalLength = 0;
         public long LastRunTime {get {return lastRunTime;}}
 
         private long lastRunTime;
@@ -96,8 +97,12 @@ namespace RayMarcher
                         (x-bmp.Size.Width/2) / (bmp.Size.Height*0.5), 
                         (y-bmp.Size.Height/2) / (bmp.Size.Height*0.5),
                         1)+CameraPosition;
+                    Point3d cameraPoint = CameraFocalLength > 0 ? cameraRotationMatrix*new Point3d(
+                        (x-bmp.Size.Width/2) / (CameraFocalLength*bmp.Size.Height*0.5), 
+                        (y-bmp.Size.Height/2) / (CameraFocalLength*bmp.Size.Height*0.5),
+                        0)+CameraPosition : CameraPosition;
                     int index = x + (y * bmp.Size.Width);
-                    pointCalculationTasks.Add(Task.Run(() => { resultImage[index] = RayMarchSceneViewPoint(viewPoint); }));
+                    pointCalculationTasks.Add(Task.Run(() => { resultImage[index] = RayMarchSceneViewPoint(cameraPoint, viewPoint); }));
                 }
             }
             for (int i = 0; i < pointCalculationTasks.Count; i++)
@@ -110,9 +115,9 @@ namespace RayMarcher
             return bmp.Bitmap;
         }
 
-        private Color RayMarchSceneViewPoint (Point3d viewPoint) 
+        private Color RayMarchSceneViewPoint (Point3d startPoint, Point3d viewPoint) 
         {
-            (double distance, int steps, Point3d hitPoint) = RayMarch(CameraPosition, viewPoint, renderDistance);
+            (double distance, int steps, Point3d hitPoint) = RayMarch(startPoint, viewPoint, renderDistance);
             if (distance >= renderDistance-0.5)
             {
                 Color color = Color.FromArgb(0, 0, 0);

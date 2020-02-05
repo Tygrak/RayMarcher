@@ -47,7 +47,7 @@ namespace RayMarcher
                 targetSphere, 5));
             scene.GlobalIllumination = 0.125;
             scene.GlobalLight = new Point3d(-0.67, -1, -0.56);
-            scene.CameraPosition = new Point3d(0, 0, -10);
+            scene.CameraPosition = new Point3d(0, 0, -40);
             scene.CameraRotation = new Point3d(0, 0, 0);
             /*for (int i = 0; i < 720; i++)
             {
@@ -60,6 +60,16 @@ namespace RayMarcher
                     Console.WriteLine($"Image rendered in {scene.LastRunTime}ms ({scene.LastRunTime/1000.0}s)");
                 }
             }*/
+            for (int i = 0; i < 240; i++)
+            {
+                targetSphere.Point = new Point3d(Math.Sin(Math.PI*(i/40.0))*32.5, 0, 0);
+                scene.CameraFocalLength = (20+Math.Sin(Math.PI*(i/30.0))*10.0);
+                scene.DrawScene(800, 600).Save($"output/output{i}.png");
+                if (i > 0 && i%5 == 0) {
+                    Console.WriteLine($"Created {i}. image");
+                    Console.WriteLine($"Image rendered in {scene.LastRunTime}ms ({scene.LastRunTime/1000.0}s)");
+                }
+            }
             //Console.WriteLine($"Done creating {tasks.Count} images!");
             scene.DrawScene(800, 600).Save("output.png");
             Console.WriteLine($"Scene rendered in {scene.LastRunTime}ms ({scene.LastRunTime/1000.0}s)");
